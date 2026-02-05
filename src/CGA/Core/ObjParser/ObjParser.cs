@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
-using Core.ObjParser.Entities;
+using System.Numerics;
+using Core.Entities;
 
 namespace Core.ObjParser
 {
@@ -86,7 +87,7 @@ namespace Core.ObjParser
             float z = ParseFloat(data[2]);
             float w = data.Length >= 4 ? ParseFloat(data[3]) : 1.0f;
 
-            objModel.Vertices.Add(new Vertex(x, y, z, w));
+            objModel.Vertices.Add(new Vector4(x, y, z, w));
         }
 
         private void ParseTextureVertex(string[] data, ObjModel objModel)
@@ -100,7 +101,7 @@ namespace Core.ObjParser
             float v = data.Length >= 2 ? ParseFloat(data[1]) : 0.0f;
             float w = data.Length >= 3 ? ParseFloat(data[2]) : 0.0f;
 
-            objModel.TextureVertices.Add(new TextureVertex(u, v, w));
+            objModel.TextureVertices.Add(new Vector3(u, v, w));
         }
 
         private void ParseVertexNormal(string[] data, ObjModel objModel)
@@ -114,7 +115,7 @@ namespace Core.ObjParser
             float j = ParseFloat(data[1]);
             float k = ParseFloat(data[2]);
 
-            objModel.VertexNormals.Add(new VertexNormal(i, j, k));
+            objModel.VertexNormals.Add(new Vector3(i, j, k));
         }
 
         private void ParseFace(string[] data, ObjModel objModel)
@@ -129,7 +130,7 @@ namespace Core.ObjParser
             foreach (string faceData in data)
             {
                 FaceIndex index = ParseFaceIndex(faceData, objModel);
-                face.Indices.Add(index);
+                face.Indexes.Add(index);
             }
 
             objModel.Faces.Add(face);

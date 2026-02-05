@@ -1,4 +1,4 @@
-﻿namespace Core.ObjParser.Entities
+﻿namespace Core.Entities
 {
     public class FaceIndex
     {

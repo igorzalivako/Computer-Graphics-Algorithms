@@ -1,12 +1,16 @@
-﻿namespace Core.ObjParser.Entities
+﻿using System.Numerics;
+
+namespace Core.Entities
 {
     public class Face
     {
-        public List<FaceIndex> Indices { get; set; } = new List<FaceIndex>();
+        public List<FaceIndex> Indexes { get; set; } = new List<FaceIndex>();
+
+        public Vector3 VertexNormal { get; set; }
 
         public override string ToString()
         {
-            return $"f {string.Join(" ", Indices)}";
+            return $"f {string.Join(" ", Indexes)}";
         }
     }
 }
