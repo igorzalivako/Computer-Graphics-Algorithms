@@ -1,0 +1,15 @@
+﻿<Application x:Class="ModelViewer.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:ModelViewer"
+             xmlns:viewModels="clr-namespace:ModelViewer.MVVM.ViewModels"
+             xmlns:view="clr-namespace:ModelViewer.MVVM.Views"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <DataTemplate DataType="{x:Type viewModels:CanvasViewModel}">
+                <view:CanvasView/>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
