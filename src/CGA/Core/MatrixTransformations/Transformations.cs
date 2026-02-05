@@ -117,7 +117,7 @@ namespace Core.MatrixTransformations
             //
             Matrix4x4 rotationMatrix = rotationXMatrix * rotationYMatrix * rotationZMatrix;
 
-            return translationMatrix * rotationMatrix * scaleMatrix;
+            return scaleMatrix * rotationMatrix * translationMatrix;
         }
 
         public static Matrix4x4 CreateViewMatrix(Vector3 eye, Vector3 target, Vector3 up)
