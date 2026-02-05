@@ -118,7 +118,7 @@ namespace Core.ObjParser
             objModel.VertexNormals.Add(new Vector3(i, j, k));
         }
 
-        private void ParseFace(string[] data, ObjModel objModel)
+        private static void ParseFace(string[] data, ObjModel objModel)
         {
             if (data.Length < 3)
             {
@@ -136,7 +136,7 @@ namespace Core.ObjParser
             objModel.Faces.Add(face);
         }
 
-        private FaceIndex ParseFaceIndex(string faceData, ObjModel objModel)
+        private static FaceIndex ParseFaceIndex(string faceData, ObjModel objModel)
         {
             string[] parts = faceData.Split('/');
 
@@ -158,7 +158,7 @@ namespace Core.ObjParser
             return new FaceIndex(vertexIndex, textureIndex, normalIndex);
         }
 
-        private int ParseIndex(string indexStr, int listCount)
+        private static int ParseIndex(string indexStr, int listCount)
         {
             int index = int.Parse(indexStr);
 
@@ -167,7 +167,7 @@ namespace Core.ObjParser
                 index = listCount + index + 1;
             }
 
-            // в obj идексы с 1
+            // в obj индексы с 1
             return index - 1;
         }
 

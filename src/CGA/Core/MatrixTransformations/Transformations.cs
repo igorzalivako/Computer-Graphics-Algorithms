@@ -103,31 +103,6 @@ namespace Core.MatrixTransformations
             return Matrix4x4.Transpose(rotationZMatrix);
         }
 
-        public static Matrix4x4 CreateModelToWorldMatrix(
-            Vector3 xAxis,
-            Vector3 yAxis,
-            Vector3 zAxis,
-            Vector3 translation)
-        {
-            // Общая матрица преобразования:
-            // [ X.x  Y.x  Z.x  T.x ]
-            // [ X.y  Y.y  Z.y  T.y ]
-            // [ X.z  Y.z  Z.z  T.z ]
-            // [ 0    0    0    1   ]
-            Vector3 normalizedX = Vector3.Normalize(xAxis);
-            Vector3 normalizedY = Vector3.Normalize(yAxis);
-            Vector3 normalizedZ = Vector3.Normalize(zAxis);
-
-            var modelToWorldMatrix = new Matrix4x4(
-                normalizedX.X, normalizedY.X, normalizedZ.X, translation.X,
-                normalizedX.Y, normalizedY.Y, normalizedZ.Y, translation.Y,
-                normalizedX.Z, normalizedY.Z, normalizedZ.Z, translation.Z,
-                0, 0, 0, 1
-            );
-
-            return Matrix4x4.Transpose(modelToWorldMatrix);
-        }
-
         public static Matrix4x4 CreateTransformationMatrix(
             Vector3 scale,
             Vector3 rotation,

@@ -31,13 +31,11 @@
 
     <Border BorderThickness="1">
 
-        <!--Border setup-->
         <Border.BorderBrush>
             <LinearGradientBrush StartPoint="0, 0" EndPoint="1, 1">
             </LinearGradientBrush>
         </Border.BorderBrush>
 
-        <!--Layout-->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="20" />
@@ -50,7 +48,6 @@
                 </MenuItem>
             </Menu>
 
-            <!--Client window-->
             <ContentControl x:Name="ClientArea"
                         Grid.Row="1"
                         Focusable="True"

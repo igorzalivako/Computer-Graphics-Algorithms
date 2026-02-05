@@ -17,7 +17,6 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Layout -->
         <Image Grid.Column="0"
                Grid.Row="0"
                Grid.RowSpan="2"
@@ -26,10 +25,6 @@
                Stretch="Fill"
                Source="{Binding WriteableBitmap}">
             <b:Interaction.Triggers>
-                <b:EventTrigger EventName="KeyDown">
-                    <b:InvokeCommandAction Command="{Binding KeyPressCommand}" 
-                                   PassEventArgsToCommand="True" />
-                </b:EventTrigger>
 
                 <b:EventTrigger EventName="MouseWheel">
                     <b:InvokeCommandAction Command="{Binding MouseWheelCommand}" 

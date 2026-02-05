@@ -4,7 +4,7 @@ namespace Core.Entities
 {
     public class Face
     {
-        public List<FaceIndex> Indexes { get; set; } = new List<FaceIndex>();
+        public List<FaceIndex> Indexes { get; set; } = [];
 
         public Vector3 VertexNormal { get; set; }
 

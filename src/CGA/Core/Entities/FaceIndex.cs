@@ -1,17 +1,12 @@
 ﻿namespace Core.Entities
 {
-    public class FaceIndex
+    public class FaceIndex(int vertexIndex, int? textureIndex = null, int? normalIndex = null)
     {
-        public int VertexIndex { get; set; }
-        public int? TextureIndex { get; set; }
-        public int? NormalIndex { get; set; }
+        public int VertexIndex { get; set; } = vertexIndex;
 
-        public FaceIndex(int vertexIndex, int? textureIndex = null, int? normalIndex = null)
-        {
-            VertexIndex = vertexIndex;
-            TextureIndex = textureIndex;
-            NormalIndex = normalIndex;
-        }
+        public int? TextureIndex { get; set; } = textureIndex;
+
+        public int? NormalIndex { get; set; } = normalIndex;
 
         public override string ToString()
         {

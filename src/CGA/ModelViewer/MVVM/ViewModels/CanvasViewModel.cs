@@ -63,7 +63,7 @@ public class CanvasViewModel : ObservableObject
         ResizeBitmap();
     }
 
-    public void OnResizee()
+    public void OnResize()
     {
         ResizeBitmap();
     }
@@ -87,18 +87,26 @@ public class CanvasViewModel : ObservableObject
     private void OnMouseWheel(object? parameter)
     {
         if (Scene.ObjModel is null)
+        {
             return;
+        }
 
         if (parameter is not MouseWheelEventArgs args)
+        {
             return;
+        }
 
         Scene.Camera.Radius -= args.Delta / 1000.0f;
 
         if (Scene.Camera.Radius < Scene.Camera.ZNear)
+        {
             Scene.Camera.Radius = Scene.Camera.ZNear;
+        }
 
         if (Scene.Camera.Radius > Scene.Camera.ZFar)
+        {
             Scene.Camera.Radius = Scene.Camera.ZFar;
+        }
 
         UpdateCanvas();
     }
@@ -106,10 +114,14 @@ public class CanvasViewModel : ObservableObject
     private void OnMouseMove(object? parameter)
     {
         if (Scene.ObjModel is null)
+        {
             return;
+        }
 
         if (parameter is not MouseEventArgs args)
+        {
             return;
+        }
 
         var currentMousePosition = args.GetPosition(null);
         var delta = currentMousePosition - _mousePosition;
@@ -137,10 +149,14 @@ public class CanvasViewModel : ObservableObject
     private void OnKeyPress(object? parameter)
     {
         if (Scene.ObjModel is null)
+        {
             return;
+        }
 
         if (parameter is not Key key)
+        {
             return;
+        }
 
         const float delta = 0.05f;
         switch (key)

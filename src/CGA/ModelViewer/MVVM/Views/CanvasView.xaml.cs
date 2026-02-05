@@ -10,7 +10,6 @@ public partial class CanvasView : UserControl
     {
         InitializeComponent();
         SizeChanged += OnSizeChanged;
-        SizeChanged += OnSizeChanged;    
     }
     
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -27,7 +26,7 @@ public partial class CanvasView : UserControl
         if (DataContext is CanvasViewModel canvasViewModel)
         {
             UpdateCanvasSize(canvasViewModel);
-            canvasViewModel.OnResizee();
+            canvasViewModel.OnResize();
         }
     }
 

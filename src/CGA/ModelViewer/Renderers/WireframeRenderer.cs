@@ -42,17 +42,19 @@ namespace ModelViewer.Renderers
         {
             int pixelWidth = bitmap.PixelWidth;
             int pixelHeight = bitmap.PixelHeight;
-            int colorBgra = (color.A << 24) | (color.R << 16) | (color.G << 8) | color.B;
+            int colorARGB = (color.A << 24) | (color.R << 16) | (color.G << 8) | color.B;
 
             bitmap.Lock();
 
             int* buffer = (int*)bitmap.BackBuffer;
 
-            foreach (Face face in objectModel.Faces)
+            Parallel.ForEach(objectModel.Faces, face => 
             {
                 int count = face.Indexes.Count;
                 if (count < 2)
+                {
                     return;
+                }
 
                 for (int i = 0; i < count; i++)
                 {
@@ -61,7 +63,9 @@ namespace ModelViewer.Renderers
 
                     if (!(index1 >= 0 && index1 < objectModel.ProjectionVertices.Length &&
                           index2 >= 0 && index2 < objectModel.ProjectionVertices.Length))
+                    {
                         continue;
+                    }
 
                     int x0 = (int)Math.Round(objectModel.ProjectionVertices[index1].X);
                     int y0 = (int)Math.Round(objectModel.ProjectionVertices[index1].Y);
@@ -76,15 +80,19 @@ namespace ModelViewer.Renderers
                         (x0 < 0 && x1 < 0) ||
                         (y0 >= pixelHeight && y1 >= pixelHeight) ||
                         (y0 < 0 && y1 < 0))
+                    {
                         continue;
+                    }
 
                     if (z0 < zNear || z1 < zNear ||
                         z0 > zFar || z1 > zFar)
+                    {
                         continue;
+                    }
 
-                    DrawBresenhamLine(buffer, new(x0, y0), new(x1, y1), pixelWidth, pixelHeight, colorBgra);
+                    DrawBresenhamLine(buffer, new(x0, y0), new(x1, y1), pixelWidth, pixelHeight, colorARGB);
                 }
-            };
+            });
 
             try
             {
@@ -100,7 +108,7 @@ namespace ModelViewer.Renderers
             int* buffer,
             Vector2 a, Vector2 b,
             int width, int height,
-            int colorBgra)
+            int colorARGB)
         {
             int x1 = (int)Math.Round(a.X, MidpointRounding.AwayFromZero);
             int y1 = (int)Math.Round(a.Y, MidpointRounding.AwayFromZero);
@@ -137,7 +145,7 @@ namespace ModelViewer.Renderers
                 if (xt >= 0 && xt < width && yt >= 0 && yt < height)
                 {
                     int index = yt * width + xt;
-                    buffer[index] = colorBgra;
+                    buffer[index] = colorARGB;
                 }
 
                 if ((e += eInc) > 1)
