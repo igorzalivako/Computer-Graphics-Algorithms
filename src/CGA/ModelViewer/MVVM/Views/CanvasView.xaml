@@ -10,20 +10,12 @@
              mc:Ignorable="d"
              Loaded="OnLoaded">
     <Grid x:Name="CanvasGrid">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-
-        <Image Grid.Column="0"
-               Grid.Row="0"
-               Grid.RowSpan="2"
-               x:Name="CanvasImage"
-               SnapsToDevicePixels="True"
+        <Image x:Name="CanvasImage"
+               Source="{Binding WriteableBitmap}"
                Stretch="Fill"
-               Source="{Binding WriteableBitmap}">
+               RenderOptions.BitmapScalingMode="NearestNeighbor"
+               RenderOptions.EdgeMode="Aliased"
+               SnapsToDevicePixels="True">
             <b:Interaction.Triggers>
 
                 <b:EventTrigger EventName="MouseWheel">

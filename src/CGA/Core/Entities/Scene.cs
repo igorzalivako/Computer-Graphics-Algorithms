@@ -29,6 +29,8 @@ namespace Core.Entities
 
             var transformMatrix = world * view * projection * viewport;
             ObjModel.Transform(transformMatrix, Camera.ZNear, Camera.ZFar);
+            ObjModel.CalculateGlobalVertices(world);
+            ObjModel.CalculateNormals(world);
         }
     }
 }

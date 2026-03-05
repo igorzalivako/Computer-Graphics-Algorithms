@@ -7,6 +7,7 @@ using Core.Entities;
 using Core.ObjParser;
 using Microsoft.Win32;
 using ModelViewer.Renderers;
+using ModelViewer.Shading;
 
 namespace ModelViewer.MVVM.ViewModels;
 
@@ -19,6 +20,8 @@ public class CanvasViewModel : ObservableObject
     private Scene _scene;
 
     private Point _mousePosition;
+
+    public (double, double) Scale;
 
     public Scene Scene
     {
@@ -75,8 +78,8 @@ public class CanvasViewModel : ObservableObject
             || WriteableBitmap.PixelHeight != Scene.CanvasHeight)
         {
             WriteableBitmap = new WriteableBitmap(
-            pixelWidth: Scene.CanvasWidth,
-            pixelHeight: Scene.CanvasHeight,
+            pixelWidth: (int)(Scene.CanvasWidth * Scale.Item1),
+            pixelHeight: (int)(Scene.CanvasHeight * Scale.Item2),
             dpiX: 96,
             dpiY: 96,
             pixelFormat: PixelFormats.Bgra32,
@@ -208,12 +211,17 @@ public class CanvasViewModel : ObservableObject
         Scene.TransformObject();
         if (Scene.ObjModel != null && WriteableBitmap != null)
         {
-            WireframeRenderer.RenderModel(
+            /*WireframeRenderer.RenderModel(
                 Scene.ObjModel,
                 WriteableBitmap,
                 Scene.Camera.ZNear,
                 Scene.Camera.ZFar,
-                Color.FromArgb(255, 150, 147, 147));
+                Color.FromArgb(255, 150, 147, 147));*/
+            RasterRenderer.RenderModel(Scene.ObjModel,
+                WriteableBitmap,
+                color: new Vector3(1, 1, 1),
+                Scene.Camera.EyePosition,
+                new FlatShading());
         }
     }
 }

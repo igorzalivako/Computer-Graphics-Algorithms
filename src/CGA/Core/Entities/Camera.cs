@@ -9,11 +9,11 @@ namespace Core.Entities
 {
     public class Camera
     {
-        public Vector3 EyePosition { get; set; } = Vector3.Zero;
+        public Vector3 EyePosition { get; private set; } = Vector3.Zero;
 
-        public Vector3 TargetPosition { get; set; } = Vector3.Zero;
+        public Vector3 TargetPosition { get; private set; } = Vector3.Zero;
 
-        public Vector3 UpVector { get; set; } = Vector3.UnitY;
+        public Vector3 UpVector { get; private set; } = Vector3.UnitY;
 
         public float AspectRatio { get; set; } = 16f / 9f;
 
@@ -23,18 +23,18 @@ namespace Core.Entities
 
         public float Radius { get; set; } = 5f;
 
-        public float Fov { get; set; } = MathF.PI / 2.0f;
+        public float Fov { get; set; } = MathF.PI / 4.0f;
 
-        private float Zeta { get; set; } = (float)Math.PI / (float)2.3;
+        private float Teta { get; set; } = (float)Math.PI / (float)2.3;
 
         private float Phi { get; set; } = (float)Math.PI / 2;
 
         public void ChangeEyePosition()
         {
-            EyePosition = new Vector3(
-                Radius * (float)Math.Cos(Phi) * (float)Math.Sin(Zeta),
-                Radius * (float)Math.Cos(Zeta),
-                Radius * (float)Math.Sin(Phi) * (float)Math.Sin(Zeta));
+            EyePosition = TargetPosition + new Vector3(
+                Radius * (float)Math.Cos(Phi) * (float)Math.Sin(Teta),
+                Radius * (float)Math.Cos(Teta),
+                Radius * (float)Math.Sin(Phi) * (float)Math.Sin(Teta));
         }
     }
 }

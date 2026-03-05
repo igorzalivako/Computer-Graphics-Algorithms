@@ -110,48 +110,38 @@ namespace ModelViewer.Renderers
             int width, int height,
             int colorARGB)
         {
-            int x1 = (int)Math.Round(a.X, MidpointRounding.AwayFromZero);
-            int y1 = (int)Math.Round(a.Y, MidpointRounding.AwayFromZero);
-            int x2 = (int)Math.Round(b.X, MidpointRounding.AwayFromZero);
-            int y2 = (int)Math.Round(b.Y, MidpointRounding.AwayFromZero);
+            int x0 = (int)Math.Round(a.X, MidpointRounding.AwayFromZero);
+            int y0 = (int)Math.Round(a.Y, MidpointRounding.AwayFromZero);
+            int x1 = (int)Math.Round(b.X, MidpointRounding.AwayFromZero);
+            int y1 = (int)Math.Round(b.Y, MidpointRounding.AwayFromZero);
 
-            int dx = x2 - x1;
-            int dy = y2 - y1;
+            int dx = Math.Abs(x1 - x0);
+            int sx = x0 < x1 ? 1 : -1;
+            int dy = Math.Abs(y1 - y0);
+            int sy = y0 < y1 ? 1 : -1;
 
-            int w = Math.Abs(dx);
-            int h = Math.Abs(dy);
-            int l = Math.Max(w, h);
+            int err = dx - dy;
 
-            int m00 = Math.Sign(dx);
-            int m01 = 0;
-            int m10 = 0;
-            int m11 = Math.Sign(dy);
-            if (w < h)
+            while (true)
             {
-                (m00, m01) = (m01, m00);
-                (m10, m11) = (m11, m10);
-            }
+                if ((uint)x0 < (uint)width && (uint)y0 < (uint)height)
+                    buffer[y0 * width + x0] = colorARGB;
 
-            int y = 0;
-            int e = 0;
-            int eDec = 2 * l;
-            int eInc = 2 * Math.Min(w, h);
+                if (x0 == x1 && y0 == y1)
+                    break;
 
-            for (int x = 0; x <= l; x++)
-            {
-                int xt = x1 + m00 * x + m01 * y;
-                int yt = y1 + m10 * x + m11 * y;
+                int e2 = err << 1; // 2*err
 
-                if (xt >= 0 && xt < width && yt >= 0 && yt < height)
+                if (e2 > -dy)
                 {
-                    int index = yt * width + xt;
-                    buffer[index] = colorARGB;
+                    err -= dy;
+                    x0 += sx;
                 }
 
-                if ((e += eInc) > 1)
+                if (e2 < dx)
                 {
-                    e -= eDec;
-                    y++;
+                    err += dx;
+                    y0 += sy;
                 }
             }
         }
