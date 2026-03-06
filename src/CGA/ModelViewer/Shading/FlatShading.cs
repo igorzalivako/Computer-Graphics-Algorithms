@@ -10,7 +10,12 @@ namespace ModelViewer.Shading
     {
         private static SpinLock[,]? spinLocks;
 
-        public unsafe void DrawShading(ObjModel objectModel, WriteableBitmap bitmap, Vector3 color, Vector3 eyePos, float[,] zBuffer)
+        public unsafe void DrawShading(
+            ObjModel objectModel,
+            WriteableBitmap bitmap,
+            Vector3 color,
+            Vector3 eyePos,
+            float[,] zBuffer)
         {
             int width = bitmap.PixelWidth;
             int height = bitmap.PixelHeight;
@@ -21,36 +26,44 @@ namespace ModelViewer.Shading
 
             int* buffer = (int*)bitmap.BackBuffer;
 
+            // направление света
+            Vector3 lightDirection = Vector3.Normalize(new Vector3(0, 0.5f, 1));
+
             Parallel.ForEach(objectModel.Faces, face =>
             {
                 int count = face.Indexes.Count;
                 if (count < 3)
                     return;
 
-                // отбраковка задних граней
-                int idx = face.Indexes[0].VertexIndex;
-                Vector3 vertexPos = objectModel.GlobalVertices[idx].AsVector3();
-                Vector3 viewDirection = eyePos - vertexPos;
+                int idx0 = face.Indexes[0].VertexIndex;
 
-                // если поверхность смотрит на камеру - рисуем, если от камеры - не рисуем
-                if (Vector3.Dot(face.VertexNormal, viewDirection) < 0)
+                Vector3 worldVertex = objectModel.GlobalVertices[idx0].AsVector3();
+
+                // направление на камеру
+                Vector3 viewDirection = Vector3.Normalize(eyePos - worldVertex);
+
+                // нормаль грани
+                Vector3 normal = Vector3.Normalize(face.SurfaceNormal);
+
+                // Back-face culling
+                if (Vector3.Dot(normal, viewDirection) <= 0)
                     return;
 
-                // освещение
-                if (Vector3.Dot(face.VertexNormal, Vector3.Normalize(eyePos)) > 0)
-                {
-                    face.VertexNormal = -face.VertexNormal;
-                }
+                // ----- освещение -----
 
-                Vector3 lightDirection = new Vector3(0, 0.5f, 1);
-                double strength = MathF.Max(Vector3.Dot(face.VertexNormal, -lightDirection), 0);
+                float ambient = 0.2f;
+
+                float diffuse = MathF.Max(Vector3.Dot(normal, lightDirection), 0);
+
+                float strength = ambient + diffuse * (1 - ambient);
 
                 int shadedColorBgra = ColorUtility.ColorToInt(
                     color: color,
                     strength: strength,
                     alpha: 255);
 
-                // отрисовка
+                // ----- растеризация -----
+
                 for (int i = 1; i < count - 1; i++)
                 {
                     int idx1 = face.Indexes[0].VertexIndex;

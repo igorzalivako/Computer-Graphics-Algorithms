@@ -6,7 +6,7 @@ namespace Core.Entities
     {
         public List<FaceIndex> Indexes { get; set; } = [];
 
-        public Vector3 VertexNormal { get; set; }
+        public Vector3 SurfaceNormal { get; set; }
 
         public override string ToString()
         {

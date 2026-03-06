@@ -75,7 +75,7 @@ namespace Core.Entities
 
                 Vector3 surfaceNormal = Vector3.Normalize(Vector3.Cross(v1, v2));
 
-                face.VertexNormal = surfaceNormal;
+                face.SurfaceNormal = surfaceNormal;
             }
         }
     }
