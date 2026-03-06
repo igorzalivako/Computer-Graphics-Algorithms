@@ -8,10 +8,14 @@ namespace ModelViewer.Shading
 {
     public class FlatShading : IShading
     {
+        private static SpinLock[,]? spinLocks;
+
         public unsafe void DrawShading(ObjModel objectModel, WriteableBitmap bitmap, Vector3 color, Vector3 eyePos, float[,] zBuffer)
         {
             int width = bitmap.PixelWidth;
             int height = bitmap.PixelHeight;
+
+            PrepareSpinLocks(zBuffer.GetLength(0), zBuffer.GetLength(1));
 
             bitmap.Lock();
 
@@ -23,15 +27,16 @@ namespace ModelViewer.Shading
                 if (count < 3)
                     return;
 
-                // отбраковка
+                // отбраковка задних граней
                 int idx = face.Indexes[0].VertexIndex;
                 Vector3 vertexPos = objectModel.GlobalVertices[idx].AsVector3();
                 Vector3 viewDirection = eyePos - vertexPos;
 
+                // если поверхность смотрит на камеру - рисуем, если от камеры - не рисуем
                 if (Vector3.Dot(face.VertexNormal, viewDirection) < 0)
                     return;
 
-                // затенение + освещение
+                // освещение
                 if (Vector3.Dot(face.VertexNormal, Vector3.Normalize(eyePos)) > 0)
                 {
                     face.VertexNormal = -face.VertexNormal;
@@ -78,6 +83,14 @@ namespace ModelViewer.Shading
             }
         }
 
+        private static void PrepareSpinLocks(int height, int width)
+        {
+            if (spinLocks == null || spinLocks.GetLength(0) < height || spinLocks.GetLength(1) != width)
+            {
+                spinLocks = new SpinLock[height, width];
+            }
+        }
+
         private static unsafe void RasterWithScanningLine(
             Vector3 vertex1, Vector3 vertex2, Vector3 vertex3,
             int height, int width,
@@ -99,7 +112,7 @@ namespace ModelViewer.Shading
                 (vertex2, vertex3) = (vertex3, vertex2);
             }
 
-            // кэфы для упрощения
+            // векторное изменение координат вдоль ребер треугольника
             Vector3 coefVer1 = (vertex3 - vertex1) / (vertex3.Y - vertex1.Y);
             Vector3 coefVer2 = (vertex2 - vertex1) / (vertex2.Y - vertex1.Y);
             Vector3 coefVer3 = (vertex3 - vertex2) / (vertex3.Y - vertex2.Y);
@@ -112,6 +125,7 @@ namespace ModelViewer.Shading
             for (int y = top; y < bottom; y++)
             {
                 Vector3 aPoint = vertex1 + (y - vertex1.Y) * coefVer1;
+                // Если до вектор2 множим на коэфф2, если ниже спустились - то на коэфф3 (направление от 2 к 3)
                 Vector3 bPoint = y < vertex2.Y
                     ? vertex1 + (y - vertex1.Y) * coefVer2
                     : vertex2 + (y - vertex2.Y) * coefVer3;
@@ -126,15 +140,22 @@ namespace ModelViewer.Shading
 
                 for (int x = left; x < right; x++)
                 {
+                    // относительная позиция текущего х от точки a
                     float t = (x - aPoint.X) / (bPoint.X - aPoint.X);
+                    // линейная интерполяция глубины (у нас есть Z крайних точек, а z внутренних точке нет, поэтому мы считаем, что она плавно (линейно) изменяется от одной точки к другой)
                     float z = aPoint.Z + t * (bPoint.Z - aPoint.Z);
-
+                   
                     int index = y * width + x;
+                    // рисуем новый пиксель, если он ближе к камере
+
+                    bool lockTaken = false;
+                    spinLocks![y, x].Enter(ref lockTaken);
                     if (z < zBuffer[y, x])
                     {
                         buffer[index] = color;
                         zBuffer[y, x] = z;
                     }
+                    spinLocks![y, x].Exit();
                 }
             }
         }
