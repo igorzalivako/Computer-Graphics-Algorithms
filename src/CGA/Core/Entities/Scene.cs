@@ -31,6 +31,7 @@ namespace Core.Entities
             ObjModel.Transform(transformMatrix, Camera.ZNear, Camera.ZFar);
             ObjModel.CalculateGlobalVertices(world);
             ObjModel.CalculateNormals(world);
+            ObjModel.CalculateVertexNormals(world);
         }
     }
 }

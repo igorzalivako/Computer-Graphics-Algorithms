@@ -221,7 +221,7 @@ public class CanvasViewModel : ObservableObject
                 WriteableBitmap,
                 color: new Vector3(1, 1, 1),
                 Scene.Camera.EyePosition,
-                new FlatShading());
+                new PhongShading());
         }
     }
 }

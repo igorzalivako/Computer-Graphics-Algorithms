@@ -27,7 +27,7 @@ namespace ModelViewer.Shading
             int* buffer = (int*)bitmap.BackBuffer;
 
             // направление света
-            Vector3 lightDirection = Vector3.Normalize(new Vector3(0, 0.5f, 1));
+            Vector3 lightDirection = Vector3.Normalize(new Vector3(0, -0.5f, -1));
 
             Parallel.ForEach(objectModel.Faces, face =>
             {
@@ -53,7 +53,7 @@ namespace ModelViewer.Shading
 
                 float ambient = 0.2f;
 
-                float diffuse = MathF.Max(Vector3.Dot(normal, lightDirection), 0);
+                float diffuse = MathF.Max(Vector3.Dot(normal, -lightDirection), 0);
 
                 float strength = ambient + diffuse * (1 - ambient);
 

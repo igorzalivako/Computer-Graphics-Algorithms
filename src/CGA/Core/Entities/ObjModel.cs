@@ -5,11 +5,11 @@ namespace Core.Entities
     public class ObjModel
     {
         public List<Vector4> Vertices { get; private set; } = [];
-        
+
         public List<Vector3> TextureVertices { get; private set; } = [];
 
         public List<Vector3> VertexNormals { get; private set; } = [];
-        
+
         public List<Face> Faces { get; private set; } = [];
 
         public Vector4[] ProjectionVertices { get; private set; } = [];
@@ -22,6 +22,7 @@ namespace Core.Entities
 
         public Vector4[] GlobalVertices { get; private set; } = [];
 
+        public Vector3[] GlobalNormales { get; private set; } = [];
 
         public void Transform(Matrix4x4 transformMatrix, float zNear, float zFar)
         {
@@ -41,6 +42,8 @@ namespace Core.Entities
 
                 ProjectionVertices[i] = vertexVector;
             }
+
+
         }
 
         public void CalculateGlobalVertices(Matrix4x4 worldMatrix)
@@ -52,6 +55,19 @@ namespace Core.Entities
                     GlobalVertices = new Vector4[Vertices.Count];
                 }
                 GlobalVertices[i] = Vector4.Transform(Vertices[i], worldMatrix);
+            }
+        }
+
+        public void CalculateVertexNormals(Matrix4x4 worldMatrix)
+        {
+            if (GlobalNormales != null || GlobalNormales!.Length < Vertices.Count)
+            {
+                GlobalNormales = new Vector3[VertexNormals.Count];
+            }
+
+            for (var i = 0; i < VertexNormals.Count; i++)
+            {
+                GlobalNormales[i] = Vector3.Transform(VertexNormals[i], worldMatrix);
             }
         }
 
