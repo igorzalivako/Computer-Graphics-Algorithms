@@ -35,12 +35,8 @@ namespace ModelViewer.Shading
 
                 // отбраковка
                 int idx = face.Indexes[0].VertexIndex;
-                Vector4 vertex = objectModel.GlobalVertices[idx];
-                Vector3 vertexPos = vertex.AsVector3();
-                Vector3 viewDirection = eyePos - vertexPos;
-
-                if (Vector3.Dot(face.SurfaceNormal, viewDirection) < 0)
-                    return;
+                Vector3 worldVertex = objectModel.GlobalVertices[idx].AsVector3();
+                Vector3 viewDirection = eyePos - worldVertex;
 
                 // отрисовка треугольника с интерполяцией нормалей
                 for (int i = 1; i < count - 1; i++)
@@ -63,11 +59,19 @@ namespace ModelViewer.Shading
                         objectModel.GlobalVertices[idx3].AsVector3()
                     ];
 
+                    Vector3 edge1 = worldVertices[0] - worldVertices[1];
+                    Vector3 edge2 = worldVertices[0] - worldVertices[2];
+                    Vector3 normal = Vector3.Normalize(Vector3.Cross(edge1, edge2));
+
+                    // Back-face culling
+                    if (Vector3.Dot(normal, viewDirection) < 0)
+                        continue;
+
                     Vector3[] normals =
                     [
-                        face.Indexes[0].NormalIndex != null ? objectModel.GlobalNormales[face.Indexes[0].NormalIndex!.Value] : face.SurfaceNormal,
-                        face.Indexes[i].NormalIndex != null ? objectModel.GlobalNormales[face.Indexes[i].NormalIndex!.Value] : face.SurfaceNormal,
-                        face.Indexes[i + 1].NormalIndex != null ? objectModel.GlobalNormales[face.Indexes[i + 1].NormalIndex!.Value] : face.SurfaceNormal
+                        face.Indexes[0].NormalIndex != null ? objectModel.GlobalNormales[face.Indexes[0].NormalIndex!.Value] : normal,
+                        face.Indexes[i].NormalIndex != null ? objectModel.GlobalNormales[face.Indexes[i].NormalIndex!.Value] : normal,
+                        face.Indexes[i + 1].NormalIndex != null ? objectModel.GlobalNormales[face.Indexes[i + 1].NormalIndex!.Value] : normal
                     ];
 
                     RasterWithPhongShading(
@@ -95,7 +99,7 @@ namespace ModelViewer.Shading
 
         private static void PrepareSpinLocks(int height, int width)
         {
-            if (spinLocks == null || spinLocks.GetLength(0) < height || spinLocks.GetLength(1) != width)
+            if (spinLocks == null || spinLocks.GetLength(0) < height || spinLocks.GetLength(1) < width)
             {
                 spinLocks = new SpinLock[height, width];
             }
@@ -110,18 +114,22 @@ namespace ModelViewer.Shading
         {
             SortVerticesByY(screenVertices, worldVertices, normals);
 
+            // обратная высота каждой стороны
             float invDeltaY13 = 1.0f / (screenVertices[2].Y - screenVertices[0].Y);
             float invDeltaY12 = 1.0f / (screenVertices[1].Y - screenVertices[0].Y);
             float invDeltaY23 = 1.0f / (screenVertices[2].Y - screenVertices[1].Y);
 
+            // вектор-приращение по каждой стороне при изменении у на 1
             Vector2 edge13 = ((screenVertices[2] - screenVertices[0]) * invDeltaY13).AsVector2();
             Vector2 edge12 = ((screenVertices[1] - screenVertices[0]) * invDeltaY12).AsVector2();
             Vector2 edge23 = ((screenVertices[2] - screenVertices[1]) * invDeltaY23).AsVector2();
 
+            // то же самое в мировых
             Vector3 world13 = (worldVertices[2] - worldVertices[0]) * invDeltaY13;
             Vector3 world12 = (worldVertices[1] - worldVertices[0]) * invDeltaY12;
             Vector3 world23 = (worldVertices[2] - worldVertices[1]) * invDeltaY23;
 
+            // приращение для интерполяции нормалей
             Vector3 normal13 = (normals[2] - normals[0]) * invDeltaY13;
             Vector3 normal12 = (normals[1] - normals[0]) * invDeltaY12;
             Vector3 normal23 = (normals[2] - normals[1]) * invDeltaY23;
@@ -130,8 +138,8 @@ namespace ModelViewer.Shading
             float z12 = (screenVertices[1].Z - screenVertices[0].Z) * invDeltaY12;
             float z23 = (screenVertices[2].Z - screenVertices[1].Z) * invDeltaY23;
 
-            int startY = Math.Max(0, (int)MathF.Ceiling(screenVertices[0].Y));
-            int endY = Math.Min(height, (int)MathF.Ceiling(screenVertices[2].Y));
+            int startY = Math.Max(0, (int)Math.Ceiling(screenVertices[0].Y));
+            int endY = Math.Min(height, (int)Math.Ceiling(screenVertices[2].Y));
 
             for (int y = startY; y < endY; y++)
             {
@@ -174,48 +182,48 @@ namespace ModelViewer.Shading
                     (aZ, bZ) = (bZ, aZ);
                 }
 
-                int startX = Math.Max(0, (int)MathF.Ceiling(aPoint.X));
-                int endX = Math.Min(width, (int)MathF.Ceiling(bPoint.X));
+                int startX = Math.Max(0, (int)Math.Ceiling(aPoint.X));
+                int endX = Math.Min(width, (int)Math.Ceiling(bPoint.X));
 
-                if (startX >= endX)
-                    continue;
-
-                float dx = endX - startX;
-                float tStep = 1.0f / dx;
-                float t = 0;
-
-                for (int x = startX; x < endX; x++, t += tStep)
+                if (startX < endX)
                 {
-                    Vector3 pixelWorld = aWorld + (bWorld - aWorld) * t;
-                    Vector3 pixelNormal = Vector3.Normalize(aNormal + (bNormal - aNormal) * t);
-                    float pixelZ = aZ + (bZ - aZ) * t;
+                    float dx = endX - startX;
+                    float tStep = 1.0f / dx;
+                    float t = 0;
 
-                    Vector3 lightDir = Vector3.Normalize(_lightPos - pixelWorld);
-                    Vector3 viewDir = Vector3.Normalize(eyePos - pixelWorld);
-                    Vector3 reflectDir = Vector3.Reflect(-lightDir, pixelNormal);
-                    Vector3 ambient = _ambientStrength * _lightColor;
-
-                    float diff = MathF.Max(Vector3.Dot(pixelNormal, lightDir), 0.0f);
-                    Vector3 diffuse = diff * _lightColor;
-
-                    float spec = MathF.Pow(MathF.Max(Vector3.Dot(viewDir, reflectDir), 0.0f), _shininess);
-                    Vector3 specular = _specularStrength * spec * _lightColor;
-
-                    Vector3 result = (ambient + diffuse + specular) * objectColor;
-                    result = Vector3.Clamp(result, Vector3.Zero, Vector3.One);
-
-                    int color = ColorUtility.ColorToInt(result);
-                    int index = y * width + x;
-
-                    bool lockTaken = false;
-                    spinLocks![y, x].Enter(ref lockTaken);
-                    if (pixelZ < zBuffer[y, x])
+                    for (int x = startX; x < endX; x++, t += tStep)
                     {
+                        Vector3 pixelWorld = aWorld + (bWorld - aWorld) * t;
+                        Vector3 pixelNormal = Vector3.Normalize(aNormal + (bNormal - aNormal) * t);
+                        float pixelZ = aZ + (bZ - aZ) * t;
 
-                        buffer[index] = color;
-                        zBuffer[y, x] = pixelZ;
+                        Vector3 lightDir = Vector3.Normalize(_lightPos - pixelWorld);
+                        Vector3 viewDir = Vector3.Normalize(eyePos - pixelWorld);
+                        Vector3 reflectDir = Vector3.Reflect(-lightDir, pixelNormal);
+                        Vector3 ambient = _ambientStrength * _lightColor;
+
+                        float diff = MathF.Max(Vector3.Dot(pixelNormal, lightDir), 0.0f);
+                        Vector3 diffuse = diff * _lightColor;
+
+                        float spec = MathF.Pow(MathF.Max(Vector3.Dot(viewDir, reflectDir), 0.0f), _shininess);
+                        Vector3 specular = _specularStrength * spec * _lightColor;
+
+                        Vector3 result = (ambient + diffuse + specular) * objectColor;
+                        result = Vector3.Clamp(result, Vector3.Zero, Vector3.One);
+
+                        int color = ColorUtility.ColorToInt(result);
+                        int index = y * width + x;
+
+                        bool lockTaken = false;
+                        spinLocks![y, x].Enter(ref lockTaken);
+                        if (pixelZ < zBuffer[y, x])
+                        {
+
+                            buffer[index] = color;
+                            zBuffer[y, x] = pixelZ;
+                        }
+                        spinLocks![y, x].Exit();
                     }
-                    spinLocks![y, x].Exit();
                 }
             }
         }
