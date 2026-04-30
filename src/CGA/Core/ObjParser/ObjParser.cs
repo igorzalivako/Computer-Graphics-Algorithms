@@ -1,12 +1,15 @@
-﻿using System.Globalization;
+﻿using Core.Entities;
+using System.Globalization;
+using System.IO;
 using System.Numerics;
-using Core.Entities;
+using System.Reflection;
 
 namespace Core.ObjParser
 {
     public class ObjParser
     {
         private readonly NumberFormatInfo _numberFormat = CultureInfo.InvariantCulture.NumberFormat;
+        private string _path = "";
 
         public ObjModel Load(string filePath)
         {
@@ -15,7 +18,7 @@ namespace Core.ObjParser
             {
                 throw new FileNotFoundException($"Файл не найден: {filePath}");
             }
-
+            _path = filePath;
             objModel.Vertices.Clear();
             objModel.TextureVertices.Clear();
             objModel.VertexNormals.Clear();
@@ -40,13 +43,15 @@ namespace Core.ObjParser
 
         private void ParseLines(string[] lines, ObjModel objModel)
         {
+            var currentMaterialName = "";
+
             foreach (string line in lines)
             {
-                ParseLine(line.Trim(), objModel);
+                ParseLine(line.Trim(), objModel, ref currentMaterialName);
             }
         }
 
-        private void ParseLine(string line, ObjModel objModel)
+        private void ParseLine(string line, ObjModel objModel, ref string currentMaterialName)
         {
             if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
             {
@@ -57,9 +62,17 @@ namespace Core.ObjParser
 
             string command = parts[0];
             string[] data = [.. parts.Skip(1)];
+            
 
             switch (command.ToLower())
             {
+                case "mtllib":
+                    ParseMtlFilename(line, _path, objModel);
+                    break;
+
+                case "usemtl":
+                    currentMaterialName = ParseCurrentMaterialName(line, objModel);
+                    break;
                 case "v":
                     ParseVertex(data, objModel);
                     break;
@@ -70,7 +83,7 @@ namespace Core.ObjParser
                     ParseVertexNormal(data, objModel);
                     break;
                 case "f":
-                    ParseFace(data, objModel);
+                    ParseFace(data, objModel, currentMaterialName);
                     break;
             }
         }
@@ -99,7 +112,7 @@ namespace Core.ObjParser
 
             float u = ParseFloat(data[0]);
             float v = data.Length >= 2 ? ParseFloat(data[1]) : 0.0f;
-            float w = data.Length >= 3 ? ParseFloat(data[2]) : 0.0f;
+            float w = data.Length >= 3 ? ParseFloat(data[2]) : 1f;
 
             objModel.TextureVertices.Add(new Vector3(u, v, w));
         }
@@ -118,7 +131,7 @@ namespace Core.ObjParser
             objModel.VertexNormals.Add(new Vector3(i, j, k));
         }
 
-        private static void ParseFace(string[] data, ObjModel objModel)
+        private static void ParseFace(string[] data, ObjModel objModel, string currentMaterialName)
         {
             if (data.Length < 3)
             {
@@ -130,8 +143,11 @@ namespace Core.ObjParser
             foreach (string faceData in data)
             {
                 FaceIndex index = ParseFaceIndex(faceData, objModel);
+                
                 face.Indexes.Add(index);
             }
+            
+            face.MaterialName = currentMaterialName;
 
             objModel.Faces.Add(face);
         }
@@ -201,5 +217,19 @@ namespace Core.ObjParser
             }
         }
 
+        private static void ParseMtlFilename(in string line, in string basePath, ObjModel model)
+        {
+            var fileLineParts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            var directory = Path.GetDirectoryName(basePath);
+            model.PathToMtlFile = Path.Combine(directory, fileLineParts[1]);
+        }
+
+        private static string ParseCurrentMaterialName(in string line, ObjModel model)
+        {
+            var materialLineParts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            return materialLineParts[1];
+        }
     }
 }

@@ -1,13 +1,17 @@
-using System.Numerics;
-using System.Windows;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using Core.Entities;
 using Core.ObjParser;
 using Microsoft.Win32;
 using ModelViewer.Renderers;
 using ModelViewer.Shading;
+using ModelViewer.Textures;
+using System.IO;
+using System.Numerics;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
+using Material = Core.Entities.Material;
 
 namespace ModelViewer.MVVM.ViewModels;
 
@@ -22,6 +26,9 @@ public class CanvasViewModel : ObservableObject
     private Point _mousePosition;
 
     public (double, double) Scale;
+
+    private Dictionary<string, Material> _materials;
+    private Dictionary<string, TextureMap> _textureMaps = new();
 
     public Scene Scene
     {
@@ -197,11 +204,47 @@ public class CanvasViewModel : ObservableObject
         {
             ObjParser objParser = new ObjParser();
             Scene.ObjModel = objParser.Load(_filePath);
+            _materials = MtlFileParser.LoadFromFile(Scene.ObjModel.PathToMtlFile);
+            LoadTextureMaps();
             UpdateCanvas();
         }
         catch (Exception ex)
         {
             MessageBox.Show($"Ошибка при загрузке файла: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void LoadTextureMaps()
+    {
+        foreach (var material in _materials)
+        {
+            var materialValue = material.Value;
+
+            try
+            {
+                if (!_textureMaps.ContainsKey(materialValue.DiffuseMap) &&
+                    !string.IsNullOrEmpty(materialValue.DiffuseMap))
+                {
+                    _textureMaps.TryAdd(materialValue.DiffuseMap, new TextureMap(materialValue.DiffuseMap));
+                }
+
+                if (!_textureMaps.ContainsKey(materialValue.NormalMap) &&
+                    !string.IsNullOrEmpty(materialValue.NormalMap))
+                {
+                    _textureMaps.TryAdd(materialValue.NormalMap, new TextureMap(materialValue.NormalMap));
+                }
+
+                if (!_textureMaps.ContainsKey(materialValue.SpecularMap) &&
+                    !string.IsNullOrEmpty(materialValue.SpecularMap))
+                {
+                    _textureMaps.TryAdd(materialValue.SpecularMap, new TextureMap(materialValue.SpecularMap));
+                }
+            }
+            catch (FileNotFoundException ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке текстур: {ex.Message}", "Ошибка", MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
     }
 
@@ -217,11 +260,11 @@ public class CanvasViewModel : ObservableObject
                 Scene.Camera.ZNear,
                 Scene.Camera.ZFar,
                 Color.FromArgb(255, 150, 147, 147));*/
-            RasterRenderer.RenderModel(Scene.ObjModel,
+            TextureRenderer.RenderModel(Scene.ObjModel,
                 WriteableBitmap,
-                color: new Vector3(1, 1, 1),
                 Scene.Camera.EyePosition,
-                new PhongShading());
+                _materials.Select(kvp => kvp.Value).ToList(),
+                _textureMaps);
         }
     }
 }

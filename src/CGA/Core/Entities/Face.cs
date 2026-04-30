@@ -8,6 +8,8 @@ namespace Core.Entities
 
         public Vector3 SurfaceNormal { get; set; }
 
+        public string MaterialName { get; set; }
+
         public override string ToString()
         {
             return $"f {string.Join(" ", Indexes)}";

@@ -11,9 +11,10 @@ namespace ModelViewer.Shading
     {
         // параметры освещения
         private static Vector3 _lightPos = new(100, 100, 100); // позиция источника света
-        private static Vector3 _lightColor = new(0.5f, 0.5f, 0.5f); // цвет света
-        private static readonly float _ambientStrength = 0.2f;
-        private static readonly float _specularStrength = 0.5f;
+        private static Vector3 _lightColor = new(1f, 1f, 1f); // цвет света
+        private static readonly float _ka = 0.2f;
+        private static readonly float _ks = 0.5f;
+        private static readonly float _kd = 1f;
         private static readonly int _shininess = 32;
         private static SpinLock[,]? spinLocks;
 
@@ -33,7 +34,6 @@ namespace ModelViewer.Shading
                 if (count < 3)
                     return;
 
-                // отбраковка
                 int idx = face.Indexes[0].VertexIndex;
                 Vector3 worldVertex = objectModel.GlobalVertices[idx].AsVector3();
                 Vector3 viewDirection = eyePos - worldVertex;
@@ -200,13 +200,13 @@ namespace ModelViewer.Shading
                         Vector3 lightDir = Vector3.Normalize(_lightPos - pixelWorld);
                         Vector3 viewDir = Vector3.Normalize(eyePos - pixelWorld);
                         Vector3 reflectDir = Vector3.Reflect(-lightDir, pixelNormal);
-                        Vector3 ambient = _ambientStrength * _lightColor;
+                        Vector3 ambient = _ka * _lightColor;
 
-                        float diff = MathF.Max(Vector3.Dot(pixelNormal, lightDir), 0.0f);
-                        Vector3 diffuse = diff * _lightColor;
+                        float diff = Math.Max(Vector3.Dot(pixelNormal, lightDir), 0.0f);
+                        Vector3 diffuse = _kd * diff * _lightColor;
 
-                        float spec = MathF.Pow(MathF.Max(Vector3.Dot(viewDir, reflectDir), 0.0f), _shininess);
-                        Vector3 specular = _specularStrength * spec * _lightColor;
+                        float spec = (float)Math.Pow(Math.Max(Vector3.Dot(viewDir, reflectDir), 0.0f), _shininess);
+                        Vector3 specular = _ks * spec * _lightColor;
 
                         Vector3 result = (ambient + diffuse + specular) * objectColor;
                         result = Vector3.Clamp(result, Vector3.Zero, Vector3.One);

@@ -23,6 +23,12 @@ namespace Core.Entities
         public Vector4[] GlobalVertices { get; private set; } = [];
 
         public Vector3[] GlobalNormales { get; private set; } = [];
+        public string PathToMtlFile { get; set; }
+
+        public float[] WValues { get; set; } = [];
+
+        public Matrix4x4 GlobalMatrix { get; set; }
+
 
         public void Transform(Matrix4x4 transformMatrix, float zNear, float zFar)
         {
@@ -31,9 +37,17 @@ namespace Core.Entities
                 ProjectionVertices = new Vector4[Vertices.Count];
             }
 
+            if (WValues.Length != Vertices.Count)
+            {
+                WValues = new float[Vertices.Count];
+            }
+
             for (var i = 0; i < Vertices.Count; i++)
             {
+
                 var vertexVector = Vector4.Transform(Vertices[i], transformMatrix);
+
+                WValues[i] = vertexVector.W;
 
                 if (vertexVector.W > zNear && vertexVector.W < zFar)
                 {
@@ -48,6 +62,7 @@ namespace Core.Entities
 
         public void CalculateGlobalVertices(Matrix4x4 worldMatrix)
         {
+            GlobalMatrix = worldMatrix;
             for (int i = 0; i < Vertices.Count; i++)
             {
                 if (GlobalVertices.Length != Vertices.Count)
