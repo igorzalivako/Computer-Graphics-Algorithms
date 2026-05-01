@@ -1,4 +1,4 @@
-﻿using Core.Entities;
+﻿using ModelViewer.Entities;
 using System.Numerics;
 using System.Windows;
 using System.Windows.Media;

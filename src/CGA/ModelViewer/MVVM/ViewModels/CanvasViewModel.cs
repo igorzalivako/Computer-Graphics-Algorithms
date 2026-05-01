@@ -1,6 +1,5 @@
-using Core.Entities;
-using Core.ObjParser;
 using Microsoft.Win32;
+using ModelViewer.Entities;
 using ModelViewer.Renderers;
 using ModelViewer.Shading;
 using ModelViewer.Textures;
@@ -10,8 +9,8 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
 using Material = Core.Entities.Material;
+using ModelViewer.Parsers;
 
 namespace ModelViewer.MVVM.ViewModels;
 
@@ -204,8 +203,9 @@ public class CanvasViewModel : ObservableObject
         {
             ObjParser objParser = new ObjParser();
             Scene.ObjModel = objParser.Load(_filePath);
-            _materials = MtlFileParser.LoadFromFile(Scene.ObjModel.PathToMtlFile);
-            LoadTextureMaps();
+            ObjParser.LoadTextures(Scene.ObjModel.PathToMtlFile, Scene.ObjModel);
+            //_materials = MtlFileParser.LoadFromFile(Scene.ObjModel.PathToMtlFile);
+            //LoadTextureMaps();
             UpdateCanvas();
         }
         catch (Exception ex)
@@ -260,11 +260,10 @@ public class CanvasViewModel : ObservableObject
                 Scene.Camera.ZNear,
                 Scene.Camera.ZFar,
                 Color.FromArgb(255, 150, 147, 147));*/
-            TextureRenderer.RenderModel(Scene.ObjModel,
+            new TextureRendererV2().RenderModel(Scene.ObjModel,
                 WriteableBitmap,
                 Scene.Camera.EyePosition,
-                _materials.Select(kvp => kvp.Value).ToList(),
-                _textureMaps);
+                new SceneSettings());
         }
     }
 }

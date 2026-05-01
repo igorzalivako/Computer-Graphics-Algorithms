@@ -1,6 +1,7 @@
-﻿using Core.MatrixTransformations;
+﻿using Core.Entities;
+using Core.MatrixTransformations;
 
-namespace Core.Entities
+namespace ModelViewer.Entities
 {
     public class Scene
     {
@@ -18,6 +19,9 @@ namespace Core.Entities
             {
                 throw new NullReferenceException("Object model is null");
             }
+
+            var rotation = Transformations.CreateRotationMatrix(ObjModel.Rotation);
+            ObjModel.RotationMatrix = rotation;
 
             var world = Transformations.CreateTransformationMatrix(ObjModel.Scale, ObjModel.Rotation, ObjModel.Position);
 

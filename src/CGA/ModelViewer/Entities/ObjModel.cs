@@ -1,6 +1,9 @@
-﻿using System.Numerics;
+﻿using Core.Entities;
+using ModelViewer.Textures;
+using System.Numerics;
+using System.Windows.Media.TextFormatting;
 
-namespace Core.Entities
+namespace ModelViewer.Entities
 {
     public class ObjModel
     {
@@ -28,36 +31,65 @@ namespace Core.Entities
         public float[] WValues { get; set; } = [];
 
         public Matrix4x4 GlobalMatrix { get; set; }
+        
+        public FaceTrg[] FaceTrgs { get; set; }
 
+        public Matrix4x4 RotationMatrix { get; set; } = Matrix4x4.Identity;
+
+        public Texture? DiffuseMap { get; set; } = null;
+        public Texture? NormalMap { get; set; } = null;
+        public Texture? SpecularMap { get; set; } = null;
+
+
+        public FaceTrg[] Triangulate()
+        {
+            int totalTriangles = Faces.Sum(face => face.Indexes.Count - 2);
+
+            FaceTrg[] faceTrgs = new FaceTrg[totalTriangles];
+
+            int faceTrgIndex = 0;
+            foreach (var face in Faces)
+            {
+                var faceVtxs = face.Indexes;
+                if (faceVtxs.Count < 3) continue;
+
+                var fv0 = faceVtxs[0];
+                for (int j = 1; j < faceVtxs.Count - 1; j++)
+                {
+                    faceTrgs[faceTrgIndex++] = new FaceTrg(fv0, faceVtxs[j], faceVtxs[j + 1]);
+                }
+            }
+
+            return faceTrgs;
+        }
 
         public void Transform(Matrix4x4 transformMatrix, float zNear, float zFar)
         {
             if (ProjectionVertices.Length != Vertices.Count)
-            {
                 ProjectionVertices = new Vector4[Vertices.Count];
-            }
 
             if (WValues.Length != Vertices.Count)
-            {
                 WValues = new float[Vertices.Count];
-            }
 
             for (var i = 0; i < Vertices.Count; i++)
             {
-
                 var vertexVector = Vector4.Transform(Vertices[i], transformMatrix);
 
-                WValues[i] = vertexVector.W;
+                float originalW = vertexVector.W;
+                WValues[i] = originalW;
 
-                if (vertexVector.W > zNear && vertexVector.W < zFar)
+                // Перспективное деление, только если вершина в пределах видимости
+                if (originalW > zNear && originalW < zFar)
                 {
-                    vertexVector /= vertexVector.W;
+                    vertexVector.X /= originalW;
+                    vertexVector.Y /= originalW;
+                    vertexVector.Z /= originalW;
                 }
+                // ВАЖНО: сохраняем оригинальную W для корректной интерполяции
+                vertexVector.W = originalW;
 
                 ProjectionVertices[i] = vertexVector;
             }
-
-
         }
 
         public void CalculateGlobalVertices(Matrix4x4 worldMatrix)
@@ -108,6 +140,20 @@ namespace Core.Entities
 
                 face.SurfaceNormal = surfaceNormal;
             }
+        }
+    }
+
+    public struct FaceTrg(FaceIndex v0, FaceIndex v1, FaceIndex v2)
+    {
+        public FaceIndex V0 { get; set; } = v0;
+        public FaceIndex V1 { get; set; } = v1;
+        public FaceIndex V2 { get; set; } = v2;
+
+        public void Deconstruct(out FaceIndex v0, out FaceIndex v1, out FaceIndex v2)
+        {
+            v0 = V0;
+            v1 = V1;
+            v2 = V2;
         }
     }
 }

@@ -120,6 +120,16 @@ namespace Core.MatrixTransformations
             return scaleMatrix * rotationMatrix * translationMatrix;
         }
 
+        public static Matrix4x4 CreateRotationMatrix(
+            Vector3 rotation)
+        {
+            Matrix4x4 rotationXMatrix = CreateRotationXMatrix(rotation.X);
+            Matrix4x4 rotationYMatrix = CreateRotationYMatrix(rotation.Y);
+            Matrix4x4 rotationZMatrix = CreateRotationZMatrix(rotation.Z);
+            Matrix4x4 rotationMatrix = rotationXMatrix * rotationYMatrix * rotationZMatrix;
+            return rotationMatrix;
+        }
+
         public static Matrix4x4 CreateViewMatrix(Vector3 eye, Vector3 target, Vector3 up)
         {
             Vector3 zAxis = Vector3.Normalize(eye - target);

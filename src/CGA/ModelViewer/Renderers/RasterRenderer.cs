@@ -1,4 +1,4 @@
-﻿using Core.Entities;
+﻿using ModelViewer.Entities;
 using ModelViewer.Shading;
 using System.Numerics;
 using System.Windows;

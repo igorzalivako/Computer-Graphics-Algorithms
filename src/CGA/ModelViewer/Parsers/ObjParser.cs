@@ -1,10 +1,12 @@
 ﻿using Core.Entities;
+using ModelViewer.Entities;
+using ModelViewer.Textures;
 using System.Globalization;
 using System.IO;
 using System.Numerics;
-using System.Reflection;
+using System.Windows.Media.Imaging;
 
-namespace Core.ObjParser
+namespace ModelViewer.Parsers
 {
     public class ObjParser
     {
@@ -26,7 +28,7 @@ namespace Core.ObjParser
 
             string[] lines = File.ReadAllLines(filePath);
             ParseLines(lines, objModel);
-
+            objModel.FaceTrgs = objModel.Triangulate();
             return objModel;
         }
 
@@ -230,6 +232,44 @@ namespace Core.ObjParser
             var materialLineParts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             return materialLineParts[1];
+        }
+
+        public static void LoadTextures(string filePath, ObjModel objModel)
+        {
+            var mtlDirectory = Path.GetDirectoryName(filePath)!;
+            foreach (var line in File.ReadLines(filePath))
+            {
+                var trimmedLine = line.Trim();
+
+                if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith('#'))
+                    continue;
+
+                var allTokens = trimmedLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (allTokens.Length == 0)
+                    continue;
+
+                var type = allTokens[0];
+                var path = allTokens[1];
+
+                switch (type)
+                {
+                    case "map_Kd":
+                        objModel.DiffuseMap = GetTexture(Path.Combine(mtlDirectory, path));
+                        break;
+                    case "norm":
+                        objModel.NormalMap = GetTexture(Path.Combine(mtlDirectory, path));
+                        break;
+                    case "map_specular":
+                        objModel.SpecularMap = GetTexture(Path.Combine(mtlDirectory, path));
+                        break;
+                }
+            }
+        }
+
+        private static Texture GetTexture(string filePath)
+        {
+            var bmp = new BitmapImage(new Uri(filePath));
+            return new Texture(bmp);
         }
     }
 }

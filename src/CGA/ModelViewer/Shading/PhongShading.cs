@@ -1,9 +1,9 @@
-﻿using Core.Entities;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using Core.Utils;
 using ModelViewer.Utilities;
+using ModelViewer.Entities;
 
 namespace ModelViewer.Shading
 {

@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
 using Vector = System.Numerics.Vector;
 using System.Diagnostics;
+using ModelViewer.Entities;
 
 namespace ModelViewer.Renderers;
 
